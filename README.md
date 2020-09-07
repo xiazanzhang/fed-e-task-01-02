@@ -1,644 +1,148 @@
-#  模块一：函数式编程与JS异步编程、手写Promise
+# 模块二：ES新特性与TypeScript、JS性能优化
 
-> ##### 简答题：
+## 简单题
 
-1. 谈谈你是如何理解JS异步编程的，EventLoop、消息队列都是做什么的，什么是宏任务，什么是微任务？
+### 一、请说出下列最终的执行结果，并解释为什么。
 
-- JS异步编程
-  - JavaScript将任务的执行模式分为两种，一种是同步执行模式，另外一种是异步编程执行模式。
-  - 众所周知，JavaScript的执行环境是单线程，即在同一时间只能做一件事情，我们把它称之为同步执行模式，这种模式的优点是直观简洁，代码会依次执行，安全，但遇到耗时任务时，则会出现程序假死的情况，很大程度降低了程序的执行效率。
-  - 异步编程执行模式不会等待这个任务执行结束后才开始执行下一个任务，对于耗时操作开启过后会立即执行下一个任务，异步模式对于JavaScript非常重要，如果没有这种模式的话单线程的JavaScript语言就无法同时处理大量耗时任务，这种模式的优点是不占用主线程，提高了程序的执行效率，但不像同步执行模式的代码一样通俗易懂，执行顺序相对会比较跳跃。
-  - 如何实现异步编程，可以通过回调函数的形式将所需要执行的函数放到任务队列中，不会占用主线程，此时的异步线程会单独的去执行异步任务，当执行完这个任务过后会将这个任务的回调放入到消息队列中，等主线程执行完毕后会依次执行消息队列当中的任务，异步编程实现的方案也在不断的发展，有以下几种方式，回调函数、事件监听、发布订阅模式、Promise、Generator、async/await等。
-- EventLoop
-  - 负责监听调用栈和消息队列，调用栈所有的任务都执行结束过后，事件循环会从消息队列当中取出第一个回调函数放入到调用栈中，整个运行机制被称为EventLoop。
-- 消息队列
-  - 负责存放待执行的任务，特点是先进先出，永不阻塞。
-- 宏任务
-  - 宿主环境提供的叫宏任务，setTimeout，setInterval，setImmediate，requestAnimationFrame等。
-- 微任务
-  - 由语言标准提供的叫微任务，process.nextTick，MutationObserver，Promise.then catch finally等。
-- 宏任务和微任务之间的关系如下图所示
-  - ![img](https://images.gitee.com/uploads/images/2020/0621/233633_21bc7573_7722044.png)	
+```javascript
+var a = []
+for(var i = 0;i<10;i++){
+    a[i] = function(){
+        console.log(i)
+    }
+}
+a[6]()
+```
 
-> 代码题
+答：
 
-1. 将下面异步代码使用Promise的方式改进
+执行结果：10
 
-   ```javascript
-   setTimeout(function () {
-       var a = 'hello'
-       setTimeout(function () {
-           var b = 'lagou'
-           setTimeout(() => {
-               var c = 'I ♥ U'
-               console.log(a + b + c)
-           }, 10);
-       }, 10);
-   }, 10);
-   ```
+原因分析：因为使用var关键字声明的变量会存在变量提升的问题，即使i在循环条件中，但for循环执行完毕以后空间并没有被释放，此时的i等于10，调用a的执行函数时，则输出10。
 
-   答：
+### 二、请说出下列最终的执行结果，并解释为什么。
 
-   ```javascript
-   const fn = () => {
-       return new Promise((resolve, reject) => {
-           setTimeout(() => {
-               return resolve(arguments)
-           }, 10);
-       })
-   }
-   
-   fn().then(() => {
-       return 'hello'
-   }).then(value => {
-       return value + 'lagou'
-   }).then(value => {
-       return value + 'I ♥ U'
-   }).then(value => {
-       console.log(value)
-   })
-   ```
+```JavaScript
+var tmp = 123
+if(true){
+    console.log(tmp)
+    let tmp
+}
+```
 
-   
+答：
 
-2. 基于以下代码完成下面的四个练习
+执行结果：报错
 
-   ```javascript
-   const cars = [
-       { name: 'Ferrair FF', horsepower: 660, dollar_value: 700000, in_stock: true },
-       { name: 'Spyker C12 Zagato', horsepower: 650, dollar_value: 648000, in_stock: false },
-       { name: 'Jafuar XKR-S', horsepower: 550, dollar_value: 132000, in_stock: false },
-       { name: 'Audi R8', horsepower: 525, dollar_value: 114200, in_stock: false },
-       { name: 'Aston Martin One-77', horsepower: 750, dollar_value: 1850000, in_stock: true },
-       { name: 'Pagani Huayra', horsepower: 700, dollar_value: 1300000, in_stock: false }
-   ]
-   ```
+原因分析：在块级作用域中使用let声明的变量会被绑定在块级作用域中，此时的tmp还未声明就被调用，结果会报错，使用let在块级作用域中声明的变量不会受外层同名变量的影响，因为它们所处的作用域不同。
 
-   
+### 三、结合ES6新语法，用最简单的方式找出数组中的最小值。
 
-   练习1：使用函数组合fp.flowRight()重新实现下面这个函数
+```javascript
+var arr = [12, 34, 32, 89, 4]
+```
 
-   ```javascript
-   let isLastInStock = function (cars) {
-       //获取最后一条数据
-       let last_car = fp.last(cars)
-       //获取最后一条数据的in_stock 属性值
-       return fp.prop('in_stock', last_car)
-   }
-   ```
+答：
 
-   答：
+执行结果：12
 
-   ```javascript
-   let isLastInStock = fp.flowRight(fp.prop('in_stock'),fp.last)
-   console.log(isLastInStock(cars)) 
-   ```
+```javascript
+var arr = [12, 34, 32, 89, 4]
 
-   
+const getMin = arr.sort((a, b) => a < b)[0]
 
-   练习2： 使用fp.flowRight()、fp.prop()和fp.first()获取第一个car的name
+console.log(getMin) // 输出12
+```
 
-   ```javascript
-    let isFirstInName=fp.flowRight(fp.prop('name'),fp.first)
-    console.log(isFirstInName(cars))
-   ```
+### 四、请详细说明var，let，const三种声明变量的方式之间的具体差别。
 
-   
+1、var用在函数外面则是全局变量，用在函数内部则是局部变量，var可以先使用后声明，不会报错，var存在变量提升的问题，var定义的变量可以被重复定义，var a=1;var a=2;这种情况不会报错。
 
-   练习3：使用帮助函数_average重构averageDollarValue,使用函数组合的方式实现
+2、let的作用域是当前的块级作用域，不受外部影响，通常在函数内部使用，作用域在函数范围内，可防止全局污染，let必须先声明后使用，否则会报错，使用let定义的变量不可被重复定义。
 
-   ```javascript
-   let _average = function (xs) {
-       return fp.reduce(fp.add, 0, xs) / xs.length
-   }
-   
-   let averageDollarValue = function (cars) {
-       let dollar_values = fp.map(function (car) {
-           return car.dollar_value
-       }, cars)
-       return _average(dollar_values)
-   }
-   ```
+3、const的作用域是当前的块级作用域，不受外部影响,const定义的变量后续不可再次更改，如果定义的是对象，对象内部属性可以修改,指向的内存地址不可以被修改，var，let可以修改，使用const定义的变量不可被重复定义。
 
-   答：
+### 五、请说出下列代码最终输出的结果，并解释为什么。
 
-   ```javascript
-   let _average = function (xs) {
-       return fp.reduce(fp.add, 0, xs) / xs.length
-   }
-   
-   let averageDollarValue = fp.flowRight(_average, fp.map((car) => car.dollar_value))
-   
-   console.log(averageDollarValue(cars))
-   ```
+```javascript
+var a = 10
+var obj = {
+    a:20,
+    fn(){
+        setTimeout(()=>{
+            console.log(this.a)
+        })
+    }
+}
+obj.fn()
+```
 
-   
+答：
 
-   练习4：使用flowRight写一个sanitizeNames()函数，返回一个下划线连接的小写字符串，把数组中的name转换为这种形式，例如：sanitizeNames(['Hello World']) => ['hello_world']
+输出结果：20
 
-   ```javascript
-   let _underscore = fp.replace(/\W+/g, '_')
-   
-   let sanitizeNames = fp.flowRight(_underscore, fp.toLower, fp.map(item => item))
-   
-   console.log(sanitizeNames(['Hello World']))
-   ```
+原因分析：obj调用fn函数时，setTimeout的回调函数使用的是箭头函数，箭头函数中的this指向的最近的this，也就是obj，所以obj.a输出20。
 
-   
+### 六、简述Symbol类型的用途。
 
-3. 基于下面提供的代码，完成后续的四个练习
+答：
 
-   ```javascript
-   class Container {
-       static of(value) {
-           return new Container(value)
-       }
-   
-       constructor(value) {
-           this._value = value
-       }
-   
-       map(fn) {
-           return Container.of(fn(this._value))
-       }
-   }
-   
-   class Maybe {
-       static of(x) {
-           return new Maybe(x)
-       }
-   
-       isNothing() {
-           return this._value === null || this._value === undefined
-       }
-   
-       constructor(x) {
-           this._value = x
-       }
-   
-       map(fn) {
-           return this.isNothing() ? this : Maybe.of(fn(this._value))
-       }
-   }
-   
-   module.exports = { Maybe, Container }
-   ```
+1、保证唯一性，每一个Symbol的值都是不相等的。
 
-   
+2、定义的私有属性，外部无法访问，只能通过类中方法进行访问。
 
-   练习1：使用fp.add(x,y)和fp.map(x,y)创建一个能让functor里的值增加的函数ex1
+### 七、说说什么是浅拷贝，什么是深拷贝？
 
-   ```javascript
-   const fp = require('lodash/fp')
-   const { Maybe, Container } = require('./03-support')
-   
-   let maybe = Maybe.of([5, 6, 11])
-   let ex1 = () => {
-       //你需要实现的函数
-   }
-   ```
+答：
 
-   答：
+浅拷贝：浅拷贝拷贝的是对象的指针，而不复制对象本身，新旧对象还是共享一块内存。
 
-   ```javascript
-   let ex1 = num => maybe.map((fp.map(fp.add(num))))._value
-   
-   console.log(ex1(3)) //[8,9,14]
-   ```
+深拷贝：深拷贝会去创造一个一模一样的对象，但新对象和原对象不会共享内存，修改新对象也不会影响到原对象。
 
-   
+两者区别：浅拷贝只复制对象的第一层属性，深拷贝可以对对象的属性进行递归复制。
 
-   练习2：实现一个函数ex2，能够使用fp.first获取列表的第一个元素
+### 八、请简述TypeScript与JavaScript之间的关系。
 
-   ```javascript
-   const fp = require('lodash/fp')
-   const { Maybe, Container } = require('./03-support')
-   
-   let xs = Container.of(['do', 'ray', 'me', 'fa', 'so', 'la', 'ti', 'do'])
-   
-   let ex2 = () => {
-       //你需要实现的函数
-   }
-   ```
+答：
 
-   答：
+1、JavaScript是一种脚本语言，TypeScript是JavaScript的一个超集，实现以面向对象编程的方式使用JavaScript，可编译成纯JavaScript。
 
-   ```javascript
-   let xs = Container.of(['do', 'ray', 'me', 'fa', 'so', 'la', 'ti', 'do'])
-   
-   let ex2 = () => xs.map((fp.first))._value
-   
-   console.log(ex2()) //do
-   ```
+2、JavaScript可以直接运行到浏览器和NODE平台中，TypeScript需要编译成JavaScript后才能运行。
 
-   
+### 九、请谈谈你所认为的TypeScript缺点
 
-   练习3：实现一个函数ex3，使用safeProp和fp.first找到user的名字的首字母
+答：
 
-   ```javascript
-   const fp = require('lodash/fp')
-   const { Maybe, Container } = require('./03-support')
-   
-   let safeProp = fp.curry(function (x, o) {
-       return Maybe.of(o[x])
-   })
-   
-   let user = { id: 2, name: 'Albert' }
-   
-   let ex3 = () => {
-       //你需要实现的函数
-   }
-   ```
+1、使用TypeScript会增加我们的工作量，因为需要明确每一个函数和变量的类型。
 
-   答：
+2、增加了学习成本，需要了解和使用更多的特性。
 
-   ```javascript
-   let safeProp = fp.curry(function (x, o) {
-       return Maybe.of(o[x])
-   })
-   
-   let user = { id: 2, name: 'Albert' }
-   
-   let ex3 = (user) => safeProp('name', user).map(fp.first)._value
-   
-   console.log(ex3(user)) //A
-   ```
+### 十、描述引用计数的工作原理和优缺点。
 
-   
+答：
 
-   练习4：使用MayBe重写ex4，不要有if语句
+工作原理：核心思想就是在内部去通过一个引用计数器来维护每一个对象都存在的一个引用数值，通过这个数值是否为0来判断这个对象是否是一个垃圾对象，如果是垃圾对象让垃圾回收器来进行一个回收和释放。
 
-   ```javascript
-   let ex4 = function (n) {
-       if (n) {
-           return parseInt(n)
-       }
-   }、
-   ```
+优点：可以及时回收垃圾，最大限度减少程序暂停。
 
-   答：
+缺点：无法回收循环引用的对象，资源消耗较大，时间开销大。
 
-   ```javascript
-   let ex4 = n => Maybe.of(n).map(parseInt)._value
-   
-   console.log(ex4())  //undefined
-   console.log(ex4(1)) //1
-   ```
+### 十一、描述标记整理算法的工作流程。
 
-   
+答：
 
-4. 手写实现MyPromise源码
+工作原理：这种算法分标记、清除、整理三个阶段来进行，首先它会去遍历所有的对象，然后去给当前的活动对象进行标记，紧接着会去清除掉那些没有被标记的对象，清除阶段会先执行整理，移动对象位置去让它们能够在地址上产生连续，最后去释放这些垃圾的所占用的空间。
 
-   要求：尽可能还原Promise中的每一个API，并通过注释的方式描述思路和原理。
+### 十二、描述V8中新生代存储区垃圾回收的流程。
 
-   ```javascript
-   const PEDDING = 'pedding' //等待
-   const FULFILLED = 'fulfilled' //成功
-   const REJECTED = 'reject' //失败
-   
-   class MyPromise {
-       /**
-        * 通过构造函数来接收这个执行器
-        * @param {*} executor 执行器
-        */
-       constructor(executor) {
-           try {
-               //这个执行器是立即执行的
-               executor(this.resolve, this.reject)
-           } catch (e) {
-               this.reject(e)
-           }
-       }
-   
-       //记录Promise状态 默认：等待
-       status = PEDDING
-       //成功之后的值
-       value = undefined
-       //失败后的原因
-       reason = undefined
-       //成功回调
-       successCallback = []
-       //失败回调
-       failCallback = []
-   
-       /**
-        * 更改状态为成功,一旦状态确定将不可更改
-        * 使用箭头函数定义是为了执行方法的时候让this指向MyPromise的实例对象
-        * @param {*} value 成功后的值
-        */
-       resolve = value => {
-           //如果状态不是等待，阻止程序向下执行
-           if (this.status !== PEDDING) return
-           //将状态更改为成功
-           this.status = FULFILLED
-           //保存成功之后的值
-           this.value = value
-           //判断成功回调是否存在，如果存在，调用存储的成功回调函数
-           // this.successCallback && this.successCallback(this.value)
-           // while (this.successCallback.length) this.successCallback.shift()(this.value)
-           while (this.successCallback.length) this.successCallback.shift()()
-       }
-   
-       /**
-        * 更改状态为失败,一旦状态确定将不可更改
-        * @param {*} reason 失败的原因
-        */
-       reject = reason => {
-           //如果状态不是等待，阻止程序向下执行
-           if (this.status !== PEDDING) return
-           //将状态更改为失败
-           this.status = REJECTED
-           //保存失败后的原因
-           this.reason = reason
-           //判断失败回调是否存在，如果存在，调用存储的失败回调函数
-           // this.failCallback && this.failCallback(this.reason)
-           while (this.failCallback.length) this.failCallback.shift()()
-       }
-   
-       /**
-        * 判断状态，如果成功调用成功回调，如果失败调用失败回调
-        * @param {*} successCallback 成功回调
-        * @param {*} failCallback 失败回调
-        */
-       then(successCallback, failCallback) {
-           //判断回调函数是否存在，如果存在就用这个回调函数，如果不存在就补充一个参数
-           //实现调用then方法的时候，这个then方法不传递参数，这个then方法会依次调用，直到传递给有回调函数的then方法
-           successCallback = successCallback ? successCallback : value => value
-           failCallback = failCallback ? failCallback : reason => { throw reason }
-   
-           //实现链式调用,返回一个MyPromise对象
-           let promose2 = new MyPromise((resolve, reject) => {
-               // 同步执行，根据当前状态返回指定的回调函数
-               if (this.status === FULFILLED) {
-                   //将代码变成异步代码，同步代码执行完成之后才会执行，目的为了能够得到promose2对象
-                   convert(() => resolvePromise(promose2, successCallback(this.value), resolve, reject), reject)
-               } else if (this.status === REJECTED) {
-                   convert(() => resolvePromise(promose2, failCallback(this.reason), resolve, reject), reject)
-               } else {
-                   //如果是等待状态（异步），将成功回调和失败回调存储起来
-                   this.successCallback.push(() => convert(() => resolvePromise(promose2, successCallback(this.value), resolve, reject), reject))
-                   this.failCallback.push(() => convert(() => resolvePromise(promose2, failCallback(this.reason), resolve, reject), reject))
-               }
-           })
-   
-           return promose2;
-       }
-   
-       /**
-        * 解决异步并发问题，允许异步代码调用的顺序得到异步代码执行的结果
-        * @param {*} array 接收一个数组作为参数，这个数组当中的可以是任何值，包括普通值和promise对象，数组当中的顺序一定是执行结果的顺序
-        */
-       static all(array) {
-           let result = []
-   
-           let index = 0
-   
-           return new MyPromise((resolve, reject) => {
-               //添加执行结果数据到result
-               const addData = (key, value) => {
-                   result[key] = value
-                   index++
-                   //判断index的长度是否等于array的长度，因为for循环是一瞬间就执行完毕的，执行for循环的过程中存在异步操作，当长度一致时才去调用resolve方法
-                   if (index === array.length) {
-                       resolve(result)
-                   }
-               }
-               for (let i = 0; i < array.length; i++) {
-                   let current = array[i]
-                   if (current instanceof MyPromise) {
-                       //mypromise对象
-                       //所有成功才返回成功，一次失败直接返回失败，这是all方法的一个特点
-                       current.then(value => addData(i, value), reason => reject(reason))
-                   } else {
-                       //普通值
-                       addData(i, array[i])
-                   }
-               }
-           })
-       }
-   
-       /**
-        * 将传递的值转换成promise对象
-        * @param {*} value 传递的值
-        */
-       static resolve(value) {
-           if (value instanceof MyPromise) {
-               return value
-           } else {
-               return new MyPromise(resolve => resolve(value))
-           }
-       }
-   
-       /**
-        * 无论promise对象最终的状态是成功还是失败，该方法都会执行一次
-        * 在finally后面可以链式调用得到这个方法的结果
-        * @param {*} callback 回调函数
-        */
-       finally(callback) {
-           return this.then(value => {
-               return MyPromise.resolve(callback()).then(() => value)
-           }, reason => {
-               return MyPromise.resolve(callback()).then(() => { throw reason })
-           })
-       }
-   
-       /**
-        * 用来处理当前这个promise对象最终的状态为失败的情况
-        * @param {*} failCallback 失败的回调函数
-        */
-       catch(failCallback) {
-           return this.then(undefined, failCallback)
-       }
-   }
-   
-   /**
-    * 判断x的值是普通值还是promise对象
-    * 如果是promise对象，查看promise对象返回的结果，再根据promise对象返回的结果 决定调用resolve还是reject
-    * 如果是普通值，直接调用resolve
-    * @param {*} promise 新的pormise对象
-    * @param {*} x 当前操作的promise对象
-    * @param {*} resolve 成功回调
-    * @param {*} reject 失败回调
-    */
-   const resolvePromise = (promise, x, resolve, reject) => {
-       //阻止promise对象循环调用
-       if (promise === x) {
-           return reject(new TypeError("Chaining cycle detected for promise #<Promise>"))
-       }
-       //判断X是否属于MyPromise对象
-       if (x instanceof MyPromise) {
-           // mypromise对象
-           // x.then(value => { resolve(value) }, reason => { reject(reason) })
-           x.then(resolve, reject)
-       } else {
-           //普通值
-           resolve(x)
-       }
-   }
-   
-   /**
-    * 将同步代码转换成异步代码
-    * @param {*} resolve 需要转换的成功回调函数
-    * @param {*} reject  需要转换的失败回调函数
-    */
-   const convert = (resolve, reject) => {
-       setTimeout(() => {
-           try {
-               return resolve()
-           } catch (e) {
-               return reject(e)
-           }
-       }, 0);
-   
-   }
-   
-   module.exports = MyPromise
-   ```
+答：
 
-   ```javascript
-   /**
-    * 1：Promise就是一个类，在执行这个类的时候，需要传递一个执行器进去，执行器会立即执行
-    * 2：Promise中有三种状态，分别为成功(fulfilled)、失败(rejected)、等待(pending)，一旦状态确定就不可更改
-    *    pending->fulfilled||rejected
-    * 3：resolve和reject函数是用来更改状态的
-    *    resolve:fulfilled
-    *    reject:rejected
-    * 4：then方法内部做的事情就是判断状态，如果状态是成功就调用成功回调函数，如果状态是失败就调用失败回调函数，then方法是被定义在原形对象中的
-    * 5：then成功回调有一个参数，表示成功之后的值，then失败回调有一个参数，表示失败后的原因
-    * 6：同一个promise对象下面的then方法是可以被调用多次的
-    * 7：then方法是可以被链式调用的，后面then方法的回调函数拿到值的是上一个then方法的回调函数的返回值  
-    */
-   
-   const MyPromise = require('./05-mypromise')
-   
-   let promise = new MyPromise((resolve, reject) => {
-       // setTimeout(() => {
-       //     resolve('成功')
-       // }, 1000);
-       // throw new Error('executor error')
-       // resolve("成功")
-       reject('失败')
-   })
-   
-   // 测试then多次调用的方式
-   
-   // promise.then(value => {
-   //     console.log(value)
-   // }, reason => {
-   //     console.log(reason)
-   // })
-   
-   // promise.then(value => {
-   //     console.log(value)
-   // }, reason => {
-   //     console.log(reason)
-   // })
-   
-   // promise.then(value => {
-   //     console.log(value)
-   // }, reason => {
-   //     console.log(reason)
-   // })
-   
-   // 测试链式调用方式 返回普通值
-   // promise.then(value => {
-   //     console.log(value)
-   //     return 100
-   // }).then(value => {
-   //     console.log(value)
-   // })
-   
-   // function other() {
-   //     return new MyPromise((resolve, reject) => {
-   //         resolve('other')
-   //     })
-   // }
-   
-   // 测试链式调用的方式 返回promise对象
-   // promise.then(value => {
-   //     console.log(value)
-   //     return other()
-   // }).then(value => {
-   //     console.log(value)
-   // })
-   
-   // 测试循环调用的情况，异常提醒
-   // let p1 = promise.then(value => {
-   //     console.log(value)
-   //     return p1
-   // })
-   
-   // p1.then(value => {
-   //     console.log(value)
-   // }, reason => {
-   //     console.log(reason.message)
-   // })
-   
-   // promise.then(value => {
-   //     console.log(value)
-   //     // throw new Error('then error')
-   //     return 'aaa'
-   // }, reason => {
-   //     console.log(reason.message)
-   //     return 100
-   // }).then(value => {
-   //     console.log(value)
-   // })
-   
-   // 测试调用then方法的时候，这个then方法不传递参数，这个then方法会依次调用，直到传递给有回调函数的then方法
-   // promise.then()
-   //     .then()
-   //     .then()
-   //     .then(value => {
-   //         console.log(value)
-   //     }, reason => {
-   //         console.log(reason)
-   //     })
-   
-   // 测试all方法
-   // const p1 = () => {
-   //     return new MyPromise((resolve, reject) => {
-   //         setTimeout(() => {
-   //             resolve('p1')
-   //         }, 2000);
-   //     })
-   // }
-   
-   // const p2 = () => {
-   //     return new MyPromise((resolve, reject) => {
-   //         resolve('p2')
-   //     })
-   // }
-   
-   // MyPromise.all(['a', 'b', p1(), p2(), 'c']).then(result => console.log(result))
-   
-   // 测试resolve方法
-   // const p1 = () => {
-   //     return new MyPromise((resolve, reject) => {
-   //         resolve('hello')
-   //     })
-   // }
-   
-   // MyPromise.resolve(10).then(value => console.log(value))
-   // MyPromise.resolve(p1()).then(value => console.log(value))
-   
-   // 测试finally方法
-   // p2().finally(() => {
-   //     console.log('finally')
-   //     return p1()
-   // }).then(value => {
-   //     console.log(value)
-   // }, reason => {
-   //     console.log(reason)
-   // })
-   
-   // 测试catch方法
-   // promise.then(value => {
-   //     console.log(value)
-   // }).catch(e => {
-   //     console.log(e)
-   // })
-   ```
+回收流程：回收过程采用复制算法+标记整理，新生代内存区分为二个等大小空间，一个是使用空间为From，另一个为空闲空间为To，活动对象存储于From空间，标记整理后将活动对象拷贝至To，From与To交换空间完成释放，至此完成存储区垃圾回收。
 
-   
+### 十三、描述增量标记算法在何时使用及工作原理。
 
+答：
+
+使用场景：增量标记优化垃圾回收操作,垃圾回收的时候会停止程序运行，程序执行的时候不能做垃圾回收，时间消耗较大，所以使用增量标记算法进行垃圾回收。
+
+工作原理：将一整段垃圾回收操作拆分成多个小部分执行，实现垃圾回收玉程序执行交替进行，组合完成整个垃圾回收。
